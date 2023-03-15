@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/fcntl.h>
-
+#include <cstring>
 namespace io {
 
 listening_socket::listening_socket()

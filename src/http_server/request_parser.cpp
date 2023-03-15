@@ -109,7 +109,8 @@ bool request_parser::add_current_line() {
 
             // Transform the header name in lowercase
             std::string name{hname};
-            std::transform(name.begin(), name.end(), name.begin(), std::tolower);
+            std::transform(name.begin(), name.end(), name.begin(),
+                    [](unsigned char c) { return std::tolower(c); });
             // Check for content-length
             std::string val{hval};
             if (name == "content-length") {
