@@ -7,11 +7,11 @@
 #include "http_server/http_request.hpp"
 #include "profiling.hpp"
 
-#include <execution.hpp>
+#include <stdexec/execution.hpp>
 
 #include <opencv2/imgcodecs.hpp>
 
-namespace ex = std::execution;
+namespace ex = stdexec;
 
 namespace {
 
@@ -84,7 +84,7 @@ auto handle_reducecolors(const conn_data& cdata, http_server::http_request&& req
 }
 
 auto handle_cartoonify(const conn_data& cdata, http_server::http_request&& req, parsed_uri puri)
-        -> task<http_server::http_response> {
+        -> exec::task<http_server::http_response> {
     int blur_size = get_param_int(puri, "blur_size", 3);
     int num_colors = get_param_int(puri, "num_colors", 5);
     int block_size = get_param_int(puri, "block_size", 5);
@@ -127,7 +127,7 @@ auto handle_oilpainting(const conn_data& cdata, http_server::http_request&& req,
 }
 
 auto handle_contourpaint(const conn_data& cdata, http_server::http_request&& req, parsed_uri puri)
-        -> task<http_server::http_response> {
+        -> exec::task<http_server::http_response> {
     int blur_size = get_param_int(puri, "blur_size", 3);
     int block_size = get_param_int(puri, "block_size", 5);
     int diff = get_param_int(puri, "diff", 5);
@@ -178,7 +178,7 @@ auto handle_reducecolors(const conn_data& cdata, http_server::http_request&& req
 }
 
 auto handle_cartoonify(const conn_data& cdata, http_server::http_request&& req, parsed_uri puri)
-        -> task<http_server::http_response> {
+        -> exec::task<http_server::http_response> {
     co_return http_server::create_response(http_server::status_code::s_500_internal_server_error);
 }
 
@@ -188,7 +188,7 @@ auto handle_oilpainting(const conn_data& cdata, http_server::http_request&& req,
 }
 
 auto handle_contourpaint(const conn_data& cdata, http_server::http_request&& req, parsed_uri puri)
-        -> task<http_server::http_response> {
+        -> exec::task<http_server::http_response> {
     co_return http_server::create_response(http_server::status_code::s_500_internal_server_error);
 }
 

@@ -44,7 +44,7 @@ auto tr_reducecolors(const cv::Mat& img, int num_colors) -> cv::Mat {
     cv::Mat labels;
     cv::Mat1f colors;
     cv::kmeans(data, num_colors, labels, criteria, 1, cv::KMEANS_RANDOM_CENTERS, colors);
-    for (unsigned int i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         data.at<float>(i, 0) = colors(labels.at<int>(i), 0);
         data.at<float>(i, 1) = colors(labels.at<int>(i), 1);
         data.at<float>(i, 2) = colors(labels.at<int>(i), 2);

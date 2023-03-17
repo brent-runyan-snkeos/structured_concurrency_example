@@ -2,18 +2,20 @@
 
 #include <system_error>
 
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
 #include <sys/fcntl.h>
+namespace sys {
+#include <sys/socket.h>
+#include <netinet/in.h>
+} // namespace sys
+#include <unistd.h>
 #include <cstring>
 namespace io {
 
 listening_socket::listening_socket()
-    : fd_(socket(AF_INET, SOCK_STREAM, 0)) {
+    : fd_(sys::socket(AF_INET, sys::SOCK_STREAM, 0)) {
     fcntl(fd_, F_SETFL, O_NONBLOCK);
     int on = 1;
-    int rc = setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on));
+    int rc = sys::setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on));
     if (rc != 0)
         throw std::system_error(std::error_code(errno, std::system_category()));
 }
@@ -33,18 +35,18 @@ auto listening_socket::operator=(listening_socket&& other) -> listening_socket& 
 }
 
 auto listening_socket::bind(int port) -> void {
-    struct sockaddr_in addr;
+    struct sys::sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htons(INADDR_ANY);
-    addr.sin_port = htons(port);
-    int rc = ::bind(fd_, (struct sockaddr*)&addr, sizeof(addr));
+    addr.sin_addr.s_addr = sys::htons(0 /*INADDR_ANY*/);
+    addr.sin_port = sys::htons(port);
+    int rc = sys::bind(fd_, (struct sys::sockaddr*)&addr, sizeof(addr));
     if (rc != 0)
         throw std::system_error(std::error_code(errno, std::system_category()));
 }
 
 auto listening_socket::listen() -> void {
-    int rc = ::listen(fd_, SOMAXCONN);
+    int rc = sys::listen(fd_, SOMAXCONN);
     if (rc != 0)
         throw std::system_error(std::error_code(errno, std::system_category()));
 }

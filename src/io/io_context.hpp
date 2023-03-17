@@ -3,7 +3,7 @@
 #include "detail/poll_io_loop.hpp"
 #include <senders/sender_from_ftor.hpp>
 
-#include <execution.hpp>
+#include <stdexec/execution.hpp>
 #include <atomic>
 
 namespace io {
@@ -34,7 +34,7 @@ public:
     //! Get a scheduler object associated with this I/O context
     auto get_scheduler() noexcept -> scheduler;
 
-private:
+    // private:
     //! The I/O loop used as the underlying implementation of this I/O context.
     detail::poll_io_loop io_loop_;
 };
@@ -44,10 +44,10 @@ public:
     struct my_sender {
         io_context* context_;
 
-        using completion_signatures = std::execution::completion_signatures< //
-                std::execution::set_value_t(),                               //
-                std::execution::set_error_t(std::exception_ptr),             //
-                std::execution::set_stopped_t()>;
+        using completion_signatures = stdexec::completion_signatures< //
+                stdexec::set_value_t(),                               //
+                stdexec::set_error_t(std::exception_ptr),             //
+                stdexec::set_stopped_t()>;
 
         template <class Receiver>
         class operation : detail::oper_body_base {
@@ -55,35 +55,32 @@ public:
             Receiver recv_;
 
             auto try_run() noexcept -> bool override {
-                std::execution::set_value(std::move(recv_));
+                stdexec::set_value(std::move(recv_));
                 return true;
             }
-            auto set_stopped() noexcept -> void override {
-                std::execution::set_stopped(std::move(recv_));
-            }
+            auto set_stopped() noexcept -> void override { stdexec::set_stopped(std::move(recv_)); }
 
         public:
             operation(detail::poll_io_loop* io_loop, Receiver&& recv)
                 : io_loop_(io_loop)
                 , recv_(std::move(recv)) {}
 
-            friend void tag_invoke(std::execution::start_t, operation& self) noexcept {
+            friend void tag_invoke(stdexec::start_t, operation& self) noexcept {
                 try {
                     self.io_loop_->add_non_io_oper(&self);
                 } catch (...) {
-                    std::execution::set_error(std::move(self.recv_), std::current_exception());
+                    stdexec::set_error(std::move(self.recv_), std::current_exception());
                 }
             }
         };
 
         template <class Receiver>
-        friend auto tag_invoke(std::execution::connect_t, my_sender&& self, Receiver&& recv)
+        friend auto tag_invoke(stdexec::connect_t, my_sender&& self, Receiver&& recv)
                 -> operation<std::decay_t<Receiver>> {
             return {&self.context_->io_loop_, std::forward<Receiver>(recv)};
         }
-        friend scheduler tag_invoke(
-                std::execution::get_completion_scheduler_t<std::execution::set_value_t>,
-                my_sender self) {
+        friend scheduler tag_invoke(stdexec::get_completion_scheduler_t<stdexec::set_value_t>,
+                my_sender self) noexcept {
             return {self.context_};
         }
     };
@@ -99,7 +96,7 @@ public:
 
     auto context() const noexcept -> io_context* { return context_; }
 
-    friend auto tag_invoke(std::execution::schedule_t, const scheduler& self) -> my_sender {
+    friend auto tag_invoke(stdexec::schedule_t, const scheduler& self) -> my_sender {
         return {self.context_};
     }
 

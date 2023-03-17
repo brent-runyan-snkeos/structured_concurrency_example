@@ -10,6 +10,7 @@ class StructuredConcurrencyExampleRecipe(ConanFile):
    homepage = "https://github.com/lucteo/structured_concurrency_example"
    url = "https://github.com/lucteo/structured_concurrency_example"
    license = "MIT License"
+   requires = "openssl/1.1.1t", "xz_utils/5.4.0", "libcurl/7.80.0", "opencv/4.5.3"
 
    settings = "os", "compiler", "build_type", "arch"
    generators = "cmake"
@@ -22,7 +23,7 @@ class StructuredConcurrencyExampleRecipe(ConanFile):
 
    def set_version(self):
       self.version = "0.1.0"
-
+     
    def build_requirements(self):
       # TODO: for some reason these doesn't work
       # self.build_requires("libcurl/7.80.0")

@@ -1,4 +1,3 @@
-
 #include "conn_data.hpp"
 #include "read_http_request.hpp"
 #include "write_http_response.hpp"
@@ -6,14 +5,16 @@
 #include "profiling.hpp"
 #include "io/async_accept.hpp"
 
-#include <execution.hpp>
-#include <task.hpp>
-#include <schedulers/static_thread_pool.hpp>
+#include <stdexec/execution.hpp>
+#include <exec/task.hpp>
+#include <exec/static_thread_pool.hpp>
 
 #include <signal.h>
 
-namespace ex = std::execution;
-using example::static_thread_pool;
+namespace ex = stdexec;
+using exec::static_thread_pool;
+
+// #define STDEXEC_DISABLE_STD_DEPRECATIONS
 
 //! Returns a sender for an HTTP response with 500 status code
 auto just_500_response() {
@@ -41,13 +42,14 @@ auto handle_connection(const conn_data& cdata) {
              });
 }
 
-auto listener(int port, io::io_context& ctx, static_thread_pool& pool) -> task<bool> {
+auto listener(int port, io::io_context& ctx, static_thread_pool& pool) -> exec::task<bool> {
     // Create a listening socket
     io::listening_socket listen_sock;
     listen_sock.bind(port);
     listen_sock.listen();
 
     while (!ctx.is_stopped()) {
+
         // Accept one incoming connection
         io::connection conn = co_await io::async_accept(ctx, listen_sock);
 
@@ -57,11 +59,10 @@ auto listener(int port, io::io_context& ctx, static_thread_pool& pool) -> task<b
         conn_data data{std::move(conn), ctx, pool};
 
         // Handle the logic for this connection
-        ex::sender auto snd =                                //
-                ex::just()                                   //
-                | ex::let_value([data = std::move(data)]() { //
-                      return handle_connection(data);
-                  });
+        ex::sender auto snd =
+                ex::on(ctx.get_scheduler(), ex::just() | ex::let_value([data = std::move(data)]() {
+                    return handle_connection(data);
+                }));
         ex::start_detached(std::move(snd));
     }
     co_return true;
@@ -109,6 +110,6 @@ auto get_main_sender() {
 }
 
 auto main() -> int {
-    auto [r] = std::this_thread::sync_wait(get_main_sender()).value();
+    auto [r] = stdexec::sync_wait(get_main_sender()).value();
     return r;
 }

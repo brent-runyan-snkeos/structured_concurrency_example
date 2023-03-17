@@ -8,11 +8,11 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-
+#include <sys/poll.h>
+namespace sys {
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/poll.h>
-
+} // namespace sys
 namespace io::detail {
 
 //! Class that implements an I/O loop, using `pool()` for I/O.

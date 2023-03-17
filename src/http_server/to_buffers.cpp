@@ -9,6 +9,11 @@ using namespace std::literals;
 const std::string_view crlf = "\r\n"sv;
 const std::string_view header_separator = ": "sv;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+// this doesn't work yet (gcc-11) but is fixed for gcc-13
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c52
+
 std::string_view status_code_to_string(status_code sc) {
     switch (sc) {
     case status_code::s_200_ok:
@@ -44,6 +49,7 @@ std::string_view status_code_to_string(status_code sc) {
     case status_code::s_503_service_unavailable:
         return "HTTP/1.1 503 Service Unavailable\r\n"sv;
     }
+#pragma GCC diagnostic pop
 }
 
 } // namespace

@@ -5,7 +5,9 @@
 #include <profiling.hpp>
 
 #include <string_view>
+namespace sys {
 #include <sys/socket.h>
+}
 
 namespace io {
 
@@ -16,12 +18,12 @@ struct async_write_sender {
     native_file_desc_t fd_;
     std::string_view data_;
 
-    using completion_signatures = std::execution::completion_signatures< //
-            std::execution::set_value_t(std::size_t),                    //
-            std::execution::set_error_t(std::system_error),              //
-            std::execution::set_stopped_t()>;
+    using completion_signatures = stdexec::completion_signatures< //
+            stdexec::set_value_t(std::size_t),                    //
+            stdexec::set_error_t(std::system_error),              //
+            stdexec::set_stopped_t()>;
 
-    template <std::execution::receiver Recv>
+    template <stdexec::receiver Recv>
     class oper : oper_body_base {
         Recv recv_;
         io_context* ctx_;
@@ -30,13 +32,14 @@ struct async_write_sender {
 
         auto try_run() noexcept -> bool override {
             PROFILING_SCOPE_N("async_write::try_run");
-            int rc = ::send(fd_, data_.data(), data_.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
+            int rc = sys::send(
+                    fd_, data_.data(), data_.size(), sys::MSG_DONTWAIT | sys::MSG_NOSIGNAL);
             PROFILING_SET_TEXT_FMT(32, "fd=%d => %d", fd_, rc);
             // Is the operation complete?
             if (rc >= 0) {
                 PROFILING_SCOPE_N("async_write::try_run -- DONE");
                 std::size_t num_sent = static_cast<std::size_t>(rc);
-                std::execution::set_value(std::move(recv_), num_sent);
+                stdexec::set_value(std::move(recv_), num_sent);
                 return true;
             }
             // Is the operation still in progress?
@@ -44,13 +47,11 @@ struct async_write_sender {
                 return false;
             // General failure
             PROFILING_SCOPE_N("async_write::try_run -- FAIL");
-            auto err = std::error_code(errno, std::system_category());
-            std::execution::set_error(std::move(recv_), err);
+            std::system_error err = std::error_code(errno, std::system_category());
+            stdexec::set_error(std::move(recv_), err);
             return true;
         }
-        auto set_stopped() noexcept -> void override {
-            std::execution::set_stopped(std::move(recv_));
-        }
+        auto set_stopped() noexcept -> void override { stdexec::set_stopped(std::move(recv_)); }
 
     public:
         oper(Recv&& recv, io_context* ctx, native_file_desc_t fd, std::string_view data)
@@ -59,19 +60,19 @@ struct async_write_sender {
             , fd_(fd)
             , data_(data) {}
 
-        friend void tag_invoke(std::execution::start_t, oper& self) noexcept {
+        friend void tag_invoke(stdexec::start_t, oper& self) noexcept {
             PROFILING_SCOPE_N("async_write::start");
             try {
                 self.ctx_->get_scheduler().add_io_oper(self.fd_, oper_type::write, &self);
             } catch (...) {
-                auto err = std::make_error_code(std::errc::operation_not_permitted);
-                std::execution::set_error(std::move(self.recv_), err);
+                std::system_error err = std::make_error_code(std::errc::operation_not_permitted);
+                stdexec::set_error(std::move(self.recv_), err);
             }
         }
     };
 
-    template <std::execution::receiver Recv>
-    friend auto tag_invoke(std::execution::connect_t, async_write_sender&& self, Recv&& recv)
+    template <stdexec::receiver Recv>
+    friend auto tag_invoke(stdexec::connect_t, async_write_sender&& self, Recv&& recv)
             -> oper<std::decay_t<Recv>> {
         return {std::forward<Recv>(recv), self.ctx_, self.fd_, self.data_};
     }

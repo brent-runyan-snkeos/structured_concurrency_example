@@ -1,6 +1,6 @@
 #pragma once
 
-#include <execution.hpp>
+#include <stdexec/execution.hpp>
 
 namespace senders {
 template <typename Sig, typename Fn>
@@ -14,13 +14,13 @@ struct sender_from_ftor {
         Recv recv_;
         Fn f_;
 
-        friend void tag_invoke(std::execution::start_t, oper& self) noexcept {
+        friend void tag_invoke(stdexec::start_t, oper& self) noexcept {
             ((Fn &&) self.f_)((Recv &&) self.recv_);
         }
     };
 
     template <typename Recv>
-    friend auto tag_invoke(std::execution::connect_t, sender_from_ftor&& self, Recv&& recv)
+    friend auto tag_invoke(stdexec::connect_t, sender_from_ftor&& self, Recv&& recv)
             -> oper<std::decay_t<Recv>> {
         return {std::forward<Recv>(recv), (Fn &&) self.f_};
     }

@@ -6,7 +6,9 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <unistd.h>
+namespace sys {
 #include <sys/socket.h>
+}
 
 using namespace std::chrono_literals;
 

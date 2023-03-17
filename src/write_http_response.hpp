@@ -6,10 +6,10 @@
 #include "io/connection.hpp"
 #include "io/async_write.hpp"
 
-#include <task.hpp>
+#include <exec/task.hpp>
 
 auto write_http_response(io::io_context& ctx, const io::connection& conn,
-        http_server::http_response resp) -> task<std::size_t> {
+        http_server::http_response resp) -> exec::task<std::size_t> {
     { PROFILING_SCOPE_N("write_http_response -- start"); }
     std::vector<std::string_view> out_buffers;
     http_server::to_buffers(resp, out_buffers);

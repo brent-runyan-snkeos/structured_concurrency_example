@@ -10,7 +10,7 @@
 #include "parsed_uri.hpp"
 #include "profiling.hpp"
 
-#include <task.hpp>
+#include <exec/task.hpp>
 
 #include <cstdio>
 #include <thread>
@@ -18,10 +18,10 @@
 
 using namespace std::chrono_literals;
 
-namespace ex = std::execution;
+namespace ex = stdexec;
 
 auto handle_request(const conn_data& cdata, http_server::http_request req)
-        -> task<http_server::http_response> {
+        -> exec::task<http_server::http_response> {
     { PROFILING_SCOPE_N("handle_request -- start"); }
 
 #if HAS_OPENCV

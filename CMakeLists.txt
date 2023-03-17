@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.17.0)
 # Define the project
 project(structured_concurrency_example LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
-
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     conan_basic_setup(TARGETS)
@@ -68,10 +65,11 @@ endif ()
 
 # OpenCV & libcurl
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(DEPS IMPORTED_TARGET opencv4 libcurl)
+pkg_check_modules(DEPS IMPORTED_TARGET opencv4)
+# pkg_check_modules(DEPS IMPORTED_TARGET opencv4 libcurl)
 if (DEPS_FOUND)
     target_compile_definitions(image_server PRIVATE HAS_OPENCV=1)
-    target_compile_definitions(image_server PRIVATE HAS_LIBCURL=1)
+    # target_compile_definitions(image_server PRIVATE HAS_LIBCURL=1)
     target_link_libraries(image_server PRIVATE PkgConfig::DEPS)
 endif ()
 
@@ -86,7 +84,7 @@ target_compile_features(image_server PRIVATE cxx_std_20)
 # Turn all warnings
 target_compile_options(image_server PRIVATE
                        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-                       -Wall>
+                       -Wall -Wno-subobject-linkage -Wno-non-template-friend>
                        $<$<CXX_COMPILER_ID:MSVC>:
                        /W4>)
 # template backtrace limit
