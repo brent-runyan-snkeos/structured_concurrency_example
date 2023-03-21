@@ -33,8 +33,10 @@
 
 # Build dir
 build/
+cmake-build*
 
 # Project files
 .idea/
+.vs/
 
 test_data/
